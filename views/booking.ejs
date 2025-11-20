@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking - <%= item.nama_lapangan %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        .jam-checkbox:checked + div { background-color: #10B981; color: white; border-color: #10B981; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); }
+        .jam-checkbox:disabled + div { background-color: #F9FAFB; color: #D1D5DB; cursor: not-allowed; border-color: #F3F4F6; }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <div class="min-h-screen flex flex-col md:flex-row">
+        
+        <div class="w-full md:w-1/2 h-64 md:h-screen md:sticky md:top-0 relative bg-gray-900">
+            <img src="<%= item.gambar %>" class="w-full h-full object-cover opacity-80" onerror="this.src='https://via.placeholder.com/800'">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:bg-gradient-to-r"></div>
+            
+            <a href="/" class="absolute top-6 left-6 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition z-20">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+
+            <div class="absolute bottom-8 left-6 md:left-12 text-white z-20 pr-6">
+                <span class="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded mb-2 inline-block"><%= item.tipe %></span>
+                <h1 class="text-3xl md:text-5xl font-bold mb-2 leading-tight"><%= item.nama_lapangan %></h1>
+                <p class="text-sm md:text-lg text-gray-200 flex items-center gap-2">
+                    <i class="fas fa-map-marker-alt text-emerald-400"></i> <%= item.lokasi %>
+                </p>
+                <p class="text-xs md:text-sm text-gray-400 mt-2 max-w-md"><%= item.deskripsi || 'Lapangan kualitas terbaik dengan fasilitas lengkap.' %></p>
+            </div>
+        </div>
+
+        <div class="w-full md:w-1/2 bg-white relative">
+            <form action="/booking/save" method="POST" id="bookingForm" class="pb-32 md:pb-10 pt-8 px-6 md:px-16 h-full overflow-y-auto">
+                <input type="hidden" name="id_lapangan" id="id_lapangan" value="<%= item.id %>">
+                <input type="hidden" name="harga_per_jam" id="harga_per_jam" value="<%= item.harga %>">
+
+                <div class="max-w-lg mx-auto">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-clipboard-check text-emerald-500"></i> Form Booking
+                    </h2>
+
+                    <div class="mb-8">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Pilih Tanggal</label>
+                        <div class="relative">
+                            <input type="date" name="tanggal" id="inputTanggal" 
+                                class="w-full bg-gray-50 border border-gray-200 text-gray-800 font-bold rounded-xl p-4 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition cursor-pointer appearance-none"
+                                value="<%= new Date().toISOString().split('T')[0] %>" required>
+                            <i class="fas fa-calendar absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <div class="flex justify-between items-end mb-3">
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">Pilih Jam (Berurutan)</label>
+                            <span class="text-[10px] bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded font-bold">Multi-select</span>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                            <% for(let i = 8; i < 23; i++) { 
+                                let jamMulai = i < 10 ? `0${i}.00` : `${i}.00`;
+                            %>
+                                <label class="cursor-pointer relative group select-none">
+                                    <input type="checkbox" name="jam" value="<%= jamMulai %>" class="jam-checkbox peer hidden">
+                                    <div class="py-3 bg-white border border-gray-200 rounded-xl text-center transition h-full flex flex-col justify-center items-center hover:border-emerald-400">
+                                        <span class="text-sm font-bold"><%= jamMulai %></span>
+                                        <span class="text-[9px] text-gray-400 status-text mt-0.5">Tersedia</span>
+                                    </div>
+                                </label>
+                            <% } %>
+                        </div>
+                    </div>
+
+                    <div id="summaryBox" class="hidden bg-emerald-50 p-4 rounded-xl border border-emerald-100 mb-20">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-600">Durasi</span>
+                            <span class="font-bold text-gray-900" id="sumDurasi">0 Jam</span>
+                        </div>
+                        <div class="flex justify-between items-center text-lg mt-1">
+                            <span class="text-gray-600 font-bold">Total</span>
+                            <span class="font-bold text-emerald-600" id="sumTotal">Rp 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="fixed bottom-0 left-0 w-full md:hidden bg-white border-t border-gray-100 p-5 rounded-t-3xl shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-50">
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <p class="text-xs text-gray-400">Total Bayar</p>
+                            <h3 class="text-xl font-bold text-gray-800" id="mobileTotal">Rp 0</h3>
+                        </div>
+                        <button type="submit" id="btnSubmitMobile" disabled class="flex-1 bg-gray-900 text-white font-bold py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black transition">
+                            BOOKING
+                        </button>
+                    </div>
+                </div>
+
+                <div class="hidden md:block max-w-lg mx-auto">
+                    <button type="submit" id="btnSubmitDesktop" disabled class="w-full bg-gray-900 text-white font-bold py-4 rounded-xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black hover:scale-[1.01] transition transform flex justify-center items-center gap-2">
+                        <span>KONFIRMASI BOOKING</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const checkboxes = document.querySelectorAll('.jam-checkbox');
+        const hargaPerJam = parseInt(document.getElementById('harga_per_jam').value);
+        const idLapangan = document.getElementById('id_lapangan').value;
+        const inputTanggal = document.getElementById('inputTanggal');
+        
+        // UI Elements
+        const sumDurasi = document.getElementById('sumDurasi');
+        const sumTotal = document.getElementById('sumTotal');
+        const mobileTotal = document.getElementById('mobileTotal');
+        const summaryBox = document.getElementById('summaryBox');
+        const btnMobile = document.getElementById('btnSubmitMobile');
+        const btnDesktop = document.getElementById('btnSubmitDesktop');
+
+        function updateUI(durasi, total) {
+            const totalStr = 'Rp ' + total.toLocaleString('id-ID');
+            const durasiStr = durasi + ' Jam';
+            
+            sumDurasi.innerText = durasiStr;
+            sumTotal.innerText = totalStr;
+            mobileTotal.innerText = totalStr;
+
+            const isDisabled = durasi === 0;
+            btnMobile.disabled = isDisabled;
+            btnDesktop.disabled = isDisabled;
+
+            summaryBox.classList.toggle('hidden', isDisabled);
+        }
+
+        function hitungTotal() {
+            const checkedBoxes = Array.from(checkboxes).filter(cb => cb.checked && !cb.disabled);
+            
+            if (checkedBoxes.length > 1) {
+                const jamAngka = checkedBoxes.map(cb => parseInt(cb.value.substring(0, 2))).sort((a, b) => a - b);
+                let berurutan = true;
+                for (let i = 0; i < jamAngka.length - 1; i++) {
+                    if (jamAngka[i+1] - jamAngka[i] !== 1) berurutan = false;
+                }
+                if (!berurutan) {
+                    alert("Mohon pilih jam secara berurutan (Contoh: 09.00, 10.00, 11.00)");
+                    this.checked = false;
+                    return hitungTotal();
+                }
+            }
+
+            const durasi = checkedBoxes.length;
+            updateUI(durasi, durasi * hargaPerJam);
+        }
+
+        async function cekKetersediaan() {
+            const tanggal = inputTanggal.value;
+            checkboxes.forEach(cb => { 
+                cb.checked = false; 
+                cb.disabled = true; 
+                cb.nextElementSibling.classList.add('opacity-50');
+                cb.nextElementSibling.querySelector('.status-text').innerText = "...";
+            });
+            updateUI(0, 0);
+
+            try {
+                const res = await fetch(`/api/cek-slot?id_lapangan=${idLapangan}&tanggal=${tanggal}`);
+                const booked = await res.json();
+                
+                checkboxes.forEach(cb => {
+                    cb.nextElementSibling.classList.remove('opacity-50');
+                    if (booked.includes(cb.value)) {
+                        cb.disabled = true;
+                        cb.nextElementSibling.classList.add('bg-red-50', 'border-red-100', 'text-gray-400');
+                        cb.nextElementSibling.querySelector('.status-text').innerText = "Booked";
+                        cb.nextElementSibling.querySelector('.status-text').classList.add('text-red-400');
+                    } else {
+                        cb.disabled = false;
+                        cb.nextElementSibling.classList.remove('bg-red-50', 'border-red-100', 'text-gray-400');
+                        cb.nextElementSibling.querySelector('.status-text').innerText = "Tersedia";
+                        cb.nextElementSibling.querySelector('.status-text').classList.remove('text-red-400');
+                    }
+                });
+            } catch (e) { console.log(e); }
+        }
+
+        inputTanggal.addEventListener('change', cekKetersediaan);
+        checkboxes.forEach(cb => cb.addEventListener('change', hitungTotal));
+        cekKetersediaan();
+    </script>
+</body>
+</html>
