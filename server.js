@@ -108,6 +108,23 @@ app.post('/booking/save', async (req, res) => {
     }
 });
 
+// --- [BARU] ROUTE BATALKAN PESANAN (OLEH CUSTOMER) ---
+app.post('/booking/cancel/:group_id', (req, res) => {
+    const groupId = req.params.group_id;
+    
+    // Hapus data berdasarkan Group ID
+    const sql = "DELETE FROM bookings WHERE group_id = ?";
+    
+    db.query(sql, [groupId], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.send("Gagal membatalkan pesanan.");
+        }
+        console.log(`Booking ${groupId} dibatalkan oleh user.`);
+        res.redirect('/history');
+    });
+});
+
 // --- 5. ROUTE HISTORY (GROUPING) ---
 app.get('/history', (req, res) => {
     const sql = `

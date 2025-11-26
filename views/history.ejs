@@ -8,34 +8,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'); body { font-family: 'Poppins', sans-serif; }</style>
 </head>
-<body class="bg-gray-50 pb-24 md:pt-24">
+<body class="bg-gray-50 pb-32 md:pb-10">
 
-    <nav class="hidden md:flex fixed top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-[100] px-10 py-4 justify-between items-center">
+    <nav class="hidden md:flex fixed top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-[100] px-10 py-4 justify-between items-center transition-all duration-300">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-lg">
+            <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-lg shadow-lg transform hover:rotate-12 transition">
                 <i class="fas fa-futbol"></i>
             </div>
-            <span class="font-bold text-xl text-gray-800">Futsal Hub</span>
+            <span class="font-bold text-xl text-gray-800 tracking-tight">Futsal Hub</span>
         </div>
         <div class="flex gap-8 font-medium text-gray-500 text-sm">
             <a href="/" class="hover:text-emerald-600 transition px-3 py-2">Beranda</a>
-            <a href="/history" class="text-emerald-600 font-bold bg-emerald-50 rounded-lg px-3 py-2">Pesanan</a>
+            <a href="/history" class="text-emerald-600 font-bold bg-emerald-50 rounded-lg px-3 py-2">Riwayat</a>
             <a href="/profil" class="hover:text-emerald-600 transition px-3 py-2">Profil</a>
         </div>
-        <div class="w-10"></div>
+        <div class="flex items-center gap-3">
+            <div class="text-right hidden lg:block">
+                <p class="text-xs text-gray-400">Selamat Datang,</p>
+                <p class="text-sm font-bold text-gray-800">User Demo</p>
+            </div>
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="w-10 h-10 rounded-full border border-gray-200 p-1">
+        </div>
     </nav>
 
-    <header class="md:hidden bg-white/90 backdrop-blur-md p-5 shadow-sm sticky top-0 z-20 mb-4 border-b border-gray-100">
-        <h1 class="font-bold text-xl text-emerald-600">Pesanan Saya</h1>
+    <header class="md:hidden bg-white/90 backdrop-blur-md p-5 shadow-sm sticky top-0 z-20 mb-6 border-b border-gray-100 flex justify-between items-center">
+        <h1 class="font-bold text-lg text-gray-800">Pesanan Saya</h1>
+        <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 text-xs">
+            <i class="fas fa-history"></i>
+        </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 md:px-8">
+    <main class="max-w-5xl mx-auto px-4 md:px-8 md:pt-28">
         
         <% if (!riwayat || riwayat.length === 0) { %>
-            <div class="flex flex-col items-center justify-center min-h-[50vh] text-gray-400">
-                <i class="fas fa-clipboard-list text-6xl mb-4 opacity-20"></i>
-                <p>Belum ada riwayat booking.</p>
-                <a href="/" class="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-full text-sm font-bold shadow-lg hover:bg-emerald-700 transition">Booking Sekarang</a>
+            <div class="flex flex-col items-center justify-center min-h-[60vh] text-gray-400">
+                <div class="bg-white p-6 rounded-full shadow-sm mb-4">
+                    <i class="fas fa-clipboard-list text-4xl text-emerald-200"></i>
+                </div>
+                <p class="font-medium text-gray-500">Belum ada riwayat booking.</p>
+                <a href="/" class="mt-4 px-6 py-2.5 bg-emerald-600 text-white rounded-full text-sm font-bold shadow-lg hover:bg-emerald-700 transition transform hover:scale-105">
+                    Cari Lapangan
+                </a>
             </div>
         <% } else { %>
             
@@ -50,40 +63,52 @@
                         let jamEndStr = (jamEnd < 10 ? '0' + jamEnd : jamEnd) + '.00';
                     %>
 
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex gap-4 items-start hover:shadow-md transition hover:border-emerald-200 group">
-                        <div class="w-24 h-24 md:w-32 md:h-32 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0 relative">
-                            <img src="<%= book.gambar || 'https://via.placeholder.com/150' %>" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="this.src='https://via.placeholder.com/150'">
-                            <div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition"></div>
-                        </div>
+                    <div class="bg-white p-5 rounded-3xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-emerald-200 transition duration-300 group flex flex-col sm:flex-row gap-5">
                         
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-bold text-gray-800 text-sm md:text-base truncate pr-2"><%= book.nama_lapangan || 'Lapangan' %></h3>
+                        <div class="w-full sm:w-32 h-32 rounded-2xl overflow-hidden bg-gray-900 relative flex-shrink-0">
+                            <img src="<%= book.gambar || 'https://via.placeholder.com/150' %>" class="w-full h-full object-cover opacity-90 group-hover:scale-110 transition duration-700" onerror="this.src='https://via.placeholder.com/150'">
+                            <div class="absolute top-2 left-2">
                                 <% if (book.status === 'Lunas') { %>
-                                    <span class="bg-emerald-100 text-emerald-600 text-[10px] px-2 py-1 rounded-full font-bold border border-emerald-200 whitespace-nowrap">Lunas</span>
+                                    <span class="bg-white/90 backdrop-blur text-emerald-600 text-[10px] px-2 py-1 rounded-md font-bold shadow-sm flex items-center gap-1"><i class="fas fa-check-circle"></i> Lunas</span>
                                 <% } else { %>
-                                    <span class="bg-yellow-100 text-yellow-600 text-[10px] px-2 py-1 rounded-full font-bold border border-yellow-200 whitespace-nowrap">Pending</span>
+                                    <span class="bg-white/90 backdrop-blur text-yellow-600 text-[10px] px-2 py-1 rounded-md font-bold shadow-sm flex items-center gap-1"><i class="fas fa-clock"></i> Pending</span>
                                 <% } %>
                             </div>
-                            
-                            <p class="text-xs text-gray-500 flex items-center mb-3 md:mb-4">
-                                <i class="fas fa-map-marker-alt mr-1.5 text-emerald-500"></i> 
-                                <span class="truncate"><%= book.lokasi || '-' %></span>
-                            </p>
+                        </div>
+                        
+                        <div class="flex-1 flex flex-col justify-between w-full">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h3 class="font-bold text-gray-800 text-lg leading-tight mb-1"><%= book.nama_lapangan %></h3>
+                                    
+                                    <% if (book.status !== 'Lunas') { %>
+                                        <form action="/booking/cancel/<%= book.group_id %>" method="POST" onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?');">
+                                            <button type="submit" class="text-gray-300 hover:text-red-500 transition" title="Batalkan Pesanan">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </div>
+                                
+                                <p class="text-xs text-gray-400 flex items-center gap-1 mb-3">
+                                    <i class="fas fa-map-marker-alt text-emerald-500"></i> 
+                                    <%= book.lokasi || 'Lokasi' %>
+                                </p>
+                            </div>
 
-                            <div class="bg-gray-50 rounded-lg p-2 md:p-3 border border-gray-100">
-                                <div class="flex justify-between items-end text-xs md:text-sm">
+                            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                                <div class="flex justify-between items-end">
                                     <div>
-                                        <p class="text-[10px] text-gray-400 font-bold uppercase">Jadwal</p>
-                                        <div class="font-bold text-gray-700 mt-0.5">
-                                            <%= book.tanggal ? new Date(book.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-' %>
-                                            <span class="mx-1 text-gray-300">|</span>
-                                            <%= book.jam_mulai %> - <%= jamEndStr %>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Jadwal Main</p>
+                                        <div class="text-xs font-bold text-gray-700 flex items-center gap-1">
+                                            <span><%= book.tanggal ? new Date(book.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-' %></span>
+                                            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                            <span><%= book.jam_mulai %> - <%= jamEndStr %></span>
                                         </div>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-[10px] text-gray-400 font-bold uppercase">Total</p>
-                                        <p class="font-bold text-emerald-600">Rp <%= totalBayar.toLocaleString('id-ID') %></p>
+                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Total</p>
+                                        <p class="text-sm font-bold text-emerald-600">Rp <%= totalBayar.toLocaleString('id-ID') %></p>
                                     </div>
                                 </div>
                             </div>
@@ -94,18 +119,18 @@
         <% } %>
     </main>
 
-    <nav class="md:hidden fixed bottom-0 w-full bg-white/95 backdrop-blur-lg border-t border-gray-100 flex justify-around py-4 z-50 rounded-t-[2rem] shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-        <a href="/" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 group">
+    <nav class="md:hidden fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-gray-100 flex justify-around py-4 z-50 rounded-t-[2rem] shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+        <a href="/" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition transform active:scale-90 group">
             <i class="fas fa-home text-xl mb-1 group-hover:-translate-y-1 transition"></i>
-            <span class="text-[10px]">Beranda</span>
+            <span class="text-[10px] font-medium">Beranda</span>
         </a>
-        <a href="/history" class="flex flex-col items-center text-emerald-600 group">
+        <a href="/history" class="flex flex-col items-center text-emerald-600 transition transform active:scale-90 group">
             <i class="fas fa-file-invoice text-xl mb-1 group-hover:-translate-y-1 transition"></i>
-            <span class="text-[10px] font-bold">Pesanan</span>
+            <span class="text-[10px] font-bold">Riwayat</span>
         </a>
-        <a href="/profil" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 group">
+        <a href="/profil" class="flex flex-col items-center text-gray-400 hover:text-emerald-600 transition transform active:scale-90 group">
             <i class="fas fa-user text-xl mb-1 group-hover:-translate-y-1 transition"></i>
-            <span class="text-[10px]">Profil</span>
+            <span class="text-[10px] font-medium">Profil</span>
         </a>
     </nav>
 
