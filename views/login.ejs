@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk - Futsal Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen px-4">
+    
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+        
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600 text-2xl shadow-inner">
+                <i class="fas fa-futbol"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800">Futsal Hub</h1>
+            <p class="text-gray-400 text-sm mt-1">Masuk untuk mulai booking lapangan</p>
+        </div>
+
+        <% if (error && error.length > 0) { %>
+            <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2 animate-pulse">
+                <i class="fas fa-exclamation-circle text-lg"></i>
+                <span class="font-bold"><%= error %></span>
+            </div>
+        <% } %>
+
+        <% if (success_msg && success_msg.length > 0) { %>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-600 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2 animate-bounce">
+                <i class="fas fa-check-circle text-lg"></i>
+                <span class="font-bold"><%= success_msg %></span>
+            </div>
+        <% } %>
+
+        <form action="/login" method="POST">
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Email</label>
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-4 top-3.5 text-gray-400"></i>
+                    <input type="email" name="email" class="w-full bg-gray-50 border border-gray-200 text-gray-700 rounded-xl py-3 pl-10 pr-4 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition placeholder-gray-300 font-medium" placeholder="contoh@email.com" required>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Password</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-4 top-3.5 text-gray-400"></i>
+                    <input type="password" name="password" class="w-full bg-gray-50 border border-gray-200 text-gray-700 rounded-xl py-3 pl-10 pr-4 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition placeholder-gray-300 font-medium" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:shadow-emerald-300 transition transform hover:-translate-y-0.5 active:scale-95 flex justify-center items-center gap-2">
+                <span>Masuk Sekarang</span>
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </form>
+
+        <div class="text-center mt-8 pt-6 border-t border-gray-100">
+            <p class="text-gray-500 text-sm mb-4">
+                Belum punya akun? <a href="/register" class="text-emerald-600 font-bold hover:underline">Daftar Disini</a>
+            </p>
+            <a href="/" class="text-gray-400 text-xs font-medium hover:text-gray-600 transition flex items-center justify-center gap-1">
+                <i class="fas fa-home"></i> Kembali ke Beranda
+            </a>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -16,6 +16,43 @@
 </head>
 <body class="bg-gray-50 pb-32 md:pb-10">
 
+<% if (success_msg && success_msg.length > 0) { %>
+    <div id="toast-welcome" class="fixed top-24 right-5 md:right-10 z-[150] bg-white border-l-4 border-emerald-500 shadow-2xl rounded-lg p-4 flex items-center gap-4 transform transition-all duration-500 translate-x-full opacity-0">
+        <div class="bg-emerald-100 w-10 h-10 rounded-full flex items-center justify-center text-emerald-600">
+            <i class="fas fa-user-check text-lg"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-gray-800 text-sm">Berhasil Masuk!</h4>
+            <p class="text-xs text-gray-500"><%= success_msg %></p>
+        </div>
+        <button onclick="closeToast()" class="text-gray-400 hover:text-gray-600 ml-2">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toast = document.getElementById('toast-welcome');
+            
+            // 1. Munculkan (Slide In)
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            }, 100);
+
+            // 2. Hilangkan Otomatis setelah 4 detik
+            setTimeout(() => {
+                closeToast();
+            }, 4000);
+        });
+
+        function closeToast() {
+            const toast = document.getElementById('toast-welcome');
+            toast.classList.add('translate-x-full', 'opacity-0');
+            setTimeout(() => toast.remove(), 500); // Hapus dari DOM
+        }
+    </script>
+<% } %>
+
     <nav class="hidden md:flex fixed top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-50 px-10 py-4 justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-lg">
@@ -27,14 +64,20 @@
             <a href="/" class="text-emerald-600 font-bold hover:text-emerald-700">Beranda</a>
             <a href="/history" class="hover:text-emerald-600 transition">Pesanan</a>
             <a href="/profil" class="hover:text-emerald-600 transition">Profil</a>
-        </div>
         <div class="flex items-center gap-3">
+    <% if (user) { %>
             <div class="text-right hidden lg:block">
-                <p class="text-xs text-gray-400">Selamat Datang,</p>
-                <p class="text-sm font-bold text-gray-800">User Demo</p>
+                <p class="text-xs text-gray-400">Halo,</p>
+                <p class="text-sm font-bold text-gray-800"><%= user.nama_lengkap %></p>
             </div>
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="w-10 h-10 rounded-full border border-gray-200 p-1">
-        </div>
+            <a href="/profil">
+                <img src="https://ui-avatars.com/api/?name=<%= user.nama_lengkap %>&background=10B981&color=fff" class="w-10 h-10 rounded-full border border-gray-200 p-1 hover:scale-105 transition cursor-pointer">
+            </a>
+        <% } else { %>
+            <a href="/login" class="text-sm font-bold text-gray-500 hover:text-emerald-600 px-4 py-2 transition">Masuk</a>
+            <a href="/register" class="bg-emerald-600 text-white text-sm font-bold px-5 py-2 rounded-full hover:bg-emerald-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">Daftar</a>
+        <% } %>
+    </div>
     </nav>
 
     <header class="bg-emerald-600 pt-8 pb-16 px-6 md:pt-28 md:pb-24 rounded-b-[3rem] shadow-lg relative z-10 overflow-hidden">
