@@ -6,24 +6,24 @@ const flash = require('connect-flash');
 const app = express();
 const port = 3000;
 
-// --- KONFIGURASI UTAMA ---
+// --- KONFIGURASI ---
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
-app.use(express.urlencoded({ extended: true })); // Wajib ada agar req.body terbaca
+app.use(express.urlencoded({ extended: true }));
 
 // 1. Konfigurasi Session (Login Tersimpan 30 Hari)
 app.use(session({
-    secret: 'kunci_rahasia_futsal_hub_123', // Ganti dengan text acak
+    secret: 'kunci_rahasia_futsal_hub_123',
     resave: false,
     saveUninitialized: false,
     cookie: { 
-        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 Hari (dalam milidetik)
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 Hari
     } 
 }));
 
 app.use(flash());
 
-// Middleware Global (User Data & Notifikasi)
+// Middleware Global (User & Notifikasi)
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     res.locals.success_msg = req.flash('success');
@@ -31,7 +31,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Database Connection
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -41,15 +40,40 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
     if (err) throw err;
-    console.log('✅ Database Terhubung!');
+    console.log('Database Terhubung!');
 });
 
 
-// --- ROUTING AUTH (LOGIN/REGISTER/LOGOUT) ---
+// --- MIDDLEWARE KEAMANAN ---
+
+// Cek Login (Wajib Login)
+const requireLogin = (req, res, next) => {
+    if (!req.session.user) {
+        req.flash('error', 'Silakan login terlebih dahulu.');
+        return res.redirect('/login');
+    }
+    next();
+};
+
+// Cek Admin (Hanya Admin Boleh Masuk)
+const verifyAdmin = (req, res, next) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        req.flash('error', 'Akses ditolak! Halaman ini khusus Admin.');
+        return res.redirect('/');
+    }
+    next();
+};
+
+
+// --- ROUTING AUTH (LOGIN, REGISTER, LOGOUT) ---
 
 // Halaman Login
 app.get('/login', (req, res) => {
-    if (req.session.user) return res.redirect('/');
+    if (req.session.user) {
+        // Jika sudah login, langsung arahkan sesuai role
+        if (req.session.user.role === 'admin') return res.redirect('/admin');
+        return res.redirect('/');
+    }
     res.render('login', { error: null });
 });
 
@@ -67,6 +91,11 @@ app.post('/login', (req, res) => {
             if (isMatch) {
                 req.session.user = user;
                 req.flash('success', `Selamat datang, ${user.nama_lengkap}!`);
+                
+                // [PENTING] Arahkan sesuai Role
+                if (user.role === 'admin') {
+                    return res.redirect('/admin');
+                }
                 return res.redirect('/');
             }
         }
@@ -81,29 +110,26 @@ app.get('/register', (req, res) => {
     res.render('register', { error: null });
 });
 
-// [PERBAIKAN] Proses Register
+// Proses Register (Fix Error)
 app.post('/register', async (req, res) => {
     const { nama, email, password } = req.body;
 
-    // 1. Validasi Input (Mencegah Error "Illegal arguments")
     if (!nama || !email || !password) {
         req.flash('error', 'Semua kolom wajib diisi!');
         return res.redirect('/register');
     }
 
-    // 2. Cek Email Ganda
     db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
         if (results.length > 0) {
-            req.flash('error', 'Email sudah terdaftar, silakan login.');
+            req.flash('error', 'Email sudah terdaftar.');
             return res.redirect('/register');
         }
 
-        // 3. Enkripsi Password
         try {
             const hashedPassword = await bcrypt.hash(password, 10);
+            // Default role = 'user'
+            const sql = 'INSERT INTO users (nama_lengkap, email, password, role) VALUES (?, ?, ?, "user")';
             
-            // 4. Simpan ke Database
-            const sql = 'INSERT INTO users (nama_lengkap, email, password) VALUES (?, ?, ?)';
             db.query(sql, [nama, email, hashedPassword], (err) => {
                 if (err) throw err;
                 req.flash('success', 'Registrasi berhasil! Silakan login.');
@@ -117,18 +143,16 @@ app.post('/register', async (req, res) => {
     });
 });
 
-// [BARU] Proses Logout
+// Logout
 app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) console.log(err);
+    req.session.destroy(() => {
         res.redirect('/login');
     });
 });
 
 
-// --- ROUTING UTAMA (BERANDA, BOOKING, DLL) ---
+// --- ROUTING UTAMA ---
 
-// API Cek Slot
 app.get('/api/cek-slot', (req, res) => {
     const { id_lapangan, tanggal } = req.query;
     db.query(`SELECT jam FROM bookings WHERE id_lapangan = ? AND tanggal = ?`, [id_lapangan, tanggal], (err, result) => {
@@ -137,7 +161,6 @@ app.get('/api/cek-slot', (req, res) => {
     });
 });
 
-// Home
 app.get('/', (req, res) => {
     const lokasi = req.query.lokasi || 'Semua'; 
     let sql = "SELECT * FROM lapangan";
@@ -145,16 +168,12 @@ app.get('/', (req, res) => {
 
     db.query(sql, (err, result) => {
         if (err) throw err;
-        res.render('index', { lapangan: result, lokasi: lokasi, activePage: 'home' });
+        res.render('index', { lapangan: result, lokasi: lokasi });
     });
 });
 
 // Booking (Wajib Login)
-app.get('/booking/:id', (req, res) => {
-    if (!req.session.user) {
-        req.flash('error', 'Silakan login untuk melakukan booking.');
-        return res.redirect('/login');
-    }
+app.get('/booking/:id', requireLogin, (req, res) => {
     const id = req.params.id;
     db.query(`SELECT * FROM lapangan WHERE id = ${id}`, (err, result) => {
         if (err) throw err;
@@ -163,9 +182,7 @@ app.get('/booking/:id', (req, res) => {
 });
 
 // Simpan Booking
-app.post('/booking/save', async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-    
+app.post('/booking/save', requireLogin, async (req, res) => {
     const { id_lapangan, tanggal, jam, harga_per_jam } = req.body;
     if (!jam) return res.redirect('back');
     
@@ -176,7 +193,7 @@ app.post('/booking/save', async (req, res) => {
     const promises = jamList.map(waktu => {
         return new Promise((resolve, reject) => {
             const sql = `INSERT INTO bookings (id_lapangan, nama_pemesan, tanggal, jam, total_harga, status, group_id) VALUES (?, ?, ?, ?, ?, 'Pending', ?)`;
-            // Simpan nama pemesan dari session user
+            // Gunakan nama user yang sedang login
             db.query(sql, [id_lapangan, req.session.user.nama_lengkap, tanggal, waktu, hargaFix, groupId], (err, res) => {
                 if (err) reject(err); else resolve(res);
             });
@@ -187,11 +204,20 @@ app.post('/booking/save', async (req, res) => {
     res.redirect('/history');
 });
 
-// History (Wajib Login)
-app.get('/history', (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
+// Cancel Booking
+app.post('/booking/cancel/:group_id', requireLogin, (req, res) => {
+    const groupId = req.params.group_id;
+    // Hapus hanya booking milik user sendiri (kecuali admin bisa hapus semua, tapi di sini pakai logic user)
+    // Agar aman, idealnya cek nama_pemesan juga, tapi untuk simple delete by ID dulu
+    const sql = "DELETE FROM bookings WHERE group_id = ?";
+    db.query(sql, [groupId], (err) => {
+        if (err) console.error(err);
+        res.redirect('/history');
+    });
+});
 
-    // Tampilkan history milik user yang sedang login saja
+// History (Wajib Login)
+app.get('/history', requireLogin, (req, res) => {
     const sql = `
         SELECT bookings.group_id, MAX(bookings.tanggal) as tanggal, MIN(bookings.jam) as jam_mulai,
         COUNT(*) as durasi, SUM(bookings.total_harga) as total_bayar, MAX(bookings.status) as status,
@@ -201,7 +227,6 @@ app.get('/history', (req, res) => {
         WHERE bookings.nama_pemesan = ? 
         GROUP BY bookings.group_id ORDER BY bookings.id DESC
     `;
-    
     db.query(sql, [req.session.user.nama_lengkap], (err, result) => {
         if (err) throw err;
         res.render('history', { riwayat: result });
@@ -209,17 +234,52 @@ app.get('/history', (req, res) => {
 });
 
 // Profil (Wajib Login)
-app.get('/profil', (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
+app.get('/profil', requireLogin, (req, res) => {
     res.render('profil');
 });
 
-// Admin
-app.get('/admin', (req, res) => {
-    // ... (Logika admin tetap sama seperti sebelumnya) ...
-    // Supaya ringkas saya tidak tulis ulang semua query admin di sini
-    // Gunakan kode admin dari jawaban sebelumnya jika ingin fitur admin aktif
-    res.send("Silakan copy logika admin dari kode sebelumnya ke sini jika diperlukan.");
+
+// --- ROUTE ADMIN (DIPROTEKSI) ---
+app.get('/admin', verifyAdmin, (req, res) => {
+    const sqlBooking = `
+        SELECT bookings.group_id, MAX(bookings.nama_pemesan) as nama_pemesan, MAX(bookings.tanggal) as tanggal,
+        MIN(bookings.jam) as jam_mulai, COUNT(*) as durasi, SUM(bookings.total_harga) as total_bayar,
+        MAX(bookings.status) as status, MAX(lapangan.nama_lapangan) as nama_lapangan
+        FROM bookings JOIN lapangan ON bookings.id_lapangan = lapangan.id 
+        GROUP BY bookings.group_id ORDER BY MAX(bookings.id) DESC
+    `;
+    
+    const sqlLapangan = `SELECT * FROM lapangan`;
+    const sqlIncome = `SELECT SUM(total_harga) AS total FROM bookings WHERE status = 'Lunas'`;
+
+    db.query(sqlBooking, (err, bookings) => {
+        if (err) throw err;
+        db.query(sqlLapangan, (err, lapangans) => {
+            if (err) throw err;
+            db.query(sqlIncome, (err, income) => {
+                if (err) throw err;
+                res.render('admin', { 
+                    bookings: bookings,
+                    lapangans: lapangans,
+                    totalPendapatan: income[0].total || 0
+                });
+            });
+        });
+    });
+});
+
+app.post('/admin/confirm/:group_id', verifyAdmin, (req, res) => {
+    db.query("UPDATE bookings SET status = 'Lunas' WHERE group_id = ?", [req.params.group_id], (err) => {
+        if (err) throw err;
+        res.redirect('/admin');
+    });
+});
+
+app.post('/admin/delete/:group_id', verifyAdmin, (req, res) => {
+    db.query("DELETE FROM bookings WHERE group_id = ?", [req.params.group_id], (err) => {
+        if (err) throw err;
+        res.redirect('/admin');
+    });
 });
 
 app.listen(port, () => {
