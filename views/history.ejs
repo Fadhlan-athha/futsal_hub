@@ -10,7 +10,7 @@
 </head>
 <body class="bg-gray-50 pb-32 md:pb-10">
 
-    <nav class="hidden md:flex fixed top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-[100] px-10 py-4 justify-between items-center transition-all duration-300">
+    <nav class="hidden md:flex fixed top-0 w-full bg-white/90 backdrop-blur-md shadow-sm z-[100] px-10 py-4 justify-between items-center">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white text-lg shadow-lg transform hover:rotate-12 transition">
                 <i class="fas fa-futbol"></i>
@@ -57,16 +57,31 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <% riwayat.forEach(book => { %>
                     <% 
+                        // Logika Perhitungan
                         let totalBayar = book.total_bayar ? parseInt(book.total_bayar) : 0;
                         let jamStart = parseInt(book.jam_mulai.substring(0, 2));
                         let jamEnd = jamStart + book.durasi;
                         let jamEndStr = (jamEnd < 10 ? '0' + jamEnd : jamEnd) + '.00';
+                        let tanggalMain = book.tanggal ? new Date(book.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+
+                        // --- [FITUR WA: Buat Link WhatsApp Otomatis] ---
+                        let adminNumber = "628986027318"; // Ganti dengan nomor HP kamu (format 628...)
+                        
+                        let pesanWA = `Halo Admin Futsal Hub, saya mau konfirmasi pembayaran booking:%0A%0A` +
+                                      `🏟 *${book.nama_lapangan}*%0A` +
+                                      `📅 ${tanggalMain}%0A` +
+                                      `⏰ ${book.jam_mulai} - ${jamEndStr} (${book.durasi} Jam)%0A` +
+                                      `💰 Total: Rp ${totalBayar.toLocaleString('id-ID')}%0A%0A` +
+                                      `Mohon diproses ya, terima kasih!`;
+                        
+                        let linkWA = `https://wa.me/${adminNumber}?text=${pesanWA}`;
                     %>
 
                     <div class="bg-white p-5 rounded-3xl shadow-[0_2px_15px_rgba(0,0,0,0.03)] border border-gray-100 hover:border-emerald-200 transition duration-300 group flex flex-col sm:flex-row gap-5">
                         
                         <div class="w-full sm:w-32 h-32 rounded-2xl overflow-hidden bg-gray-900 relative flex-shrink-0">
                             <img src="<%= book.gambar || 'https://via.placeholder.com/150' %>" class="w-full h-full object-cover opacity-90 group-hover:scale-110 transition duration-700" onerror="this.src='https://via.placeholder.com/150'">
+                            
                             <div class="absolute top-2 left-2">
                                 <% if (book.status === 'Lunas') { %>
                                     <span class="bg-white/90 backdrop-blur text-emerald-600 text-[10px] px-2 py-1 rounded-md font-bold shadow-sm flex items-center gap-1"><i class="fas fa-check-circle"></i> Lunas</span>
@@ -82,8 +97,8 @@
                                     <h3 class="font-bold text-gray-800 text-lg leading-tight mb-1"><%= book.nama_lapangan %></h3>
                                     
                                     <% if (book.status !== 'Lunas') { %>
-                                        <form action="/booking/cancel/<%= book.group_id %>" method="POST" onsubmit="return confirm('Yakin ingin membatalkan pesanan ini?');">
-                                            <button type="submit" class="text-gray-300 hover:text-red-500 transition" title="Batalkan Pesanan">
+                                        <form action="/booking/cancel/<%= book.group_id %>" method="POST" onsubmit="return confirm('Batalkan pesanan ini?');">
+                                            <button type="submit" class="text-gray-300 hover:text-red-500 transition p-1" title="Batalkan">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </form>
@@ -96,21 +111,23 @@
                                 </p>
                             </div>
 
-                            <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                                <div class="flex justify-between items-end">
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Jadwal Main</p>
-                                        <div class="text-xs font-bold text-gray-700 flex items-center gap-1">
-                                            <span><%= book.tanggal ? new Date(book.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-' %></span>
-                                            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-                                            <span><%= book.jam_mulai %> - <%= jamEndStr %></span>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Total</p>
-                                        <p class="text-sm font-bold text-emerald-600">Rp <%= totalBayar.toLocaleString('id-ID') %></p>
+                            <div class="flex items-end justify-between mt-auto">
+                                <div>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wide mb-0.5">Jadwal</p>
+                                    <div class="text-xs font-bold text-gray-700">
+                                        <%= tanggalMain.split(' ')[0] %> <%= tanggalMain.split(' ')[1] %> • <%= book.jam_mulai %>
                                     </div>
                                 </div>
+
+                                <% if (book.status === 'Lunas') { %>
+                                    <button class="bg-emerald-50 text-emerald-600 text-xs font-bold px-4 py-2 rounded-xl border border-emerald-100">
+                                        E-Ticket
+                                    </button>
+                                <% } else { %>
+                                    <a href="<%= linkWA %>" target="_blank" class="bg-green-500 hover:bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-green-200 flex items-center gap-2 transition transform hover:scale-105">
+                                        <i class="fab fa-whatsapp text-base"></i> Bayar
+                                    </a>
+                                <% } %>
                             </div>
                         </div>
                     </div>
